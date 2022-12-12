@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -50,7 +51,7 @@ def product_detail(request, id):
 @api_view(['GET','POST'])
 def collection_list(request):
     if request.method =='GET':
-        queryset = Collection.objects.all()
+        queryset = Collection.objects.annotate(products_count=Count('products')).all()
         serializer= CollectionSerializer(
             queryset,many=True,context={'request':request}
             )
@@ -66,7 +67,9 @@ def collection_list(request):
 
 @api_view(['GET','PUT','DELETE'])
 def collection_detail(request, pk):
-    collection = get_object_or_404(Collection,pk=pk)
+    collection = get_object_or_404(Collection.objects.annotate(
+        products_count=Count('products')
+    ),pk=pk)
     if request.method =='GET':
         serializer = CollectionSerializer(collection)
         return Response(serializer.data)
@@ -78,5 +81,7 @@ def collection_detail(request, pk):
         return Response(serializer.data)
     
     elif request.method =='DELETE':
+        if collection.products.count() > 0:
+            return Response({'error':'Collection cannot be deleted because it includes one or more products'})
         collection.delete()
         return Response(status= status.HTTP_204_NO_CONTENT)
