@@ -10,6 +10,8 @@ mysqlclient = "*"
 python-decouple = "*"
 psycopg2 = "*"
 djangorestframework = "*"
+drf-nested-routers = "*"
+django-filter = "*"
 
 [dev-packages]
 autopep8 = "*"
